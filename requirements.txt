@@ -1,0 +1,13 @@
+langchain
+python-dotenv==1.0.0
+streamlit==1.18.1
+pymupdf==1.23.26
+unstructured[all-docs]
+pydantic==2.6.4
+lxml==5.1.0
+langchainhub==0.1.15
+chromadb==0.4.17
+langchain_openai==0.1.1
+tesseract==0.1.3
+altair<5
+
