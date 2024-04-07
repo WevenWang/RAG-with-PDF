@@ -1,4 +1,4 @@
-path = "assets/new_wave_guideline.pdf"
+paths = ["assets/new_wave_guideline.pdf", "assets/FHA_Handbook.pdf"]
 
 from typing import Any
 
@@ -10,24 +10,26 @@ class Element(BaseModel):
     text: Any
 
 # Get elements
-def get_raw_pdf_elements(path: str) -> Any:
-    raw_pdf_elements = partition_pdf(
-        filename=path,
-        # Unstructured first finds embedded image blocks
-        extract_images_in_pdf=False,
-        # Use layout model (YOLOX) to get bounding boxes (for tables) and find titles
-        # Titles are any sub-section of the document
-        infer_table_structure=True,
-        # Post processing to aggregate text once we have the title
-        chunking_strategy="by_title",
-        # Chunking params to aggregate text blocks
-        # Attempt to create a new chunk 3800 chars
-        # Attempt to keep chunks > 2000 chars
-        max_characters=4000,
-        new_after_n_chars=3800,
-        combine_text_under_n_chars=2000,
-        image_output_dir_path=path,
-    )
+def get_raw_pdf_elements(paths: Any) -> Any:
+    raw_pdf_elements = []
+    for path in paths:
+        raw_pdf_elements.extend(partition_pdf(
+            filename=path,
+            # Unstructured first finds embedded image blocks
+            extract_images_in_pdf=False,
+            # Use layout model (YOLOX) to get bounding boxes (for tables) and find titles
+            # Titles are any sub-section of the document
+            infer_table_structure=True,
+            # Post processing to aggregate text once we have the title
+            chunking_strategy="by_title",
+            # Chunking params to aggregate text blocks
+            # Attempt to create a new chunk 3800 chars
+            # Attempt to keep chunks > 2000 chars
+            max_characters=4000,
+            new_after_n_chars=3800,
+            combine_text_under_n_chars=2000,
+            image_output_dir_path=path,
+        ))
     return raw_pdf_elements
 
 # Categorize elements
@@ -40,7 +42,7 @@ def categorize_elements(raw_pdf_elements: Any) -> Any:
             categorized_elements.append(Element(type="text", text=str(element)))
     return categorized_elements
 
-categorized_elements = categorize_elements(get_raw_pdf_elements(path))
+categorized_elements = categorize_elements(get_raw_pdf_elements(paths))
 
 table_elements = [e for e in categorized_elements if e.type == "table"]
 print('# of Tables:', len(table_elements))
@@ -81,7 +83,7 @@ from langchain_openai import OpenAIEmbeddings
 
 def create_vector_store():
     # The vectorstore to use to index the child chunks
-    vectorstore = Chroma(collection_name="summaries", embedding_function=OpenAIEmbeddings(openai_api_key="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"))
+    vectorstore = Chroma(collection_name="summaries", embedding_function=OpenAIEmbeddings())
 
     # The storage layer for the parent documents
     store = InMemoryStore()
